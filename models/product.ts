@@ -1,18 +1,29 @@
-// models/Product.ts
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
-const ProductSchema = new Schema({
-  name: String,
-  description: String,
-  slug: { type: String, unique: true },
-  type: String,
-  alt: String,
-  keywords: [String],
-  priceFlex: Number,
-  priceDura: Number,
-  images: [String],
-});
+export interface IProduct extends Document {
+  name: string;
+  description: string;
+  type: "sublimable" | "personalizado";
+  alt: string;
+  keywords: string[];
+  priceFlex: number;
+  priceDura?: number;
+  images: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-const ProductModel = models.Product || model("Product", ProductSchema);
+const productSchema = new Schema<IProduct>({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  type: { type: String, enum: ["sublimable", "personalizado"], default: "sublimable" },
+  alt: { type: String, required: true },
+  keywords: { type: [String], default: [] },
+  priceFlex: { type: Number, required: true },
+  priceDura: { type: Number },
+  images: { type: [String], default: [] },
+}, { timestamps: true });
 
-export default ProductModel;
+const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>("Product", productSchema);
+
+export default Product;

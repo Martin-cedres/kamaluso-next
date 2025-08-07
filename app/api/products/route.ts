@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
+import Product, { IProduct } from "@/lib/models/Product";
 import { uploadImageToS3 } from "@/lib/s3";
 import sharp from "sharp";
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const keywords = keywordsStr ? keywordsStr.split(",").map(k => k.trim()) : [];
 
     // Procesar imágenes
-    const files = formData.getAll("files") as File[]; 
+    const files = formData.getAll("files") as File[];
     const images: string[] = [];
 
     for (const file of files) {
