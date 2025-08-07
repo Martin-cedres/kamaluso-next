@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import Product, { IProduct } from "@/lib/models/Product";
+import Product from "@/lib/models/Product";  // No necesitas importar IProduct si no lo usas acá
 import { uploadImageToS3 } from "@/lib/s3";
 import sharp from "sharp";
+import mongoose from "mongoose";
 
 export async function GET() {
   try {
@@ -75,7 +76,11 @@ export async function POST(request: Request) {
 
     await newProduct.save();
 
-    return NextResponse.json({ message: "Producto creado correctamente", id: newProduct._id.toString() });
+    // Aquí corregimos el casteo para que TypeScript entienda que _id es ObjectId
+    return NextResponse.json({
+      message: "Producto creado correctamente",
+      id: (newProduct._id as mongoose.Types.ObjectId).toString(),
+    });
   } catch (error) {
     console.error("Error al crear producto:", error);
     return NextResponse.json({ message: "Error interno" }, { status: 500 });
