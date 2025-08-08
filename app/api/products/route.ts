@@ -1,4 +1,4 @@
-// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\api\products\route.ts
+// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\api\products\route.ts  /
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Product, { IProduct } from "@/lib/models/Product"; // Si IProduct ya está en el modelo, úsalo desde ahí
