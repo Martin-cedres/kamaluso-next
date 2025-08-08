@@ -7,28 +7,29 @@ if (!MONGODB_URI) {
   throw new Error("Por favor define MONGODB_URI en tu archivo .env");
 }
 
-// Para que TS no se queje, extendemos global
+// Extiende global para cachear la conexión
 declare global {
-  var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
+  // eslint-disable-next-line no-var
+  var mongooseCache: {
+    conn: mongoose.Connection | null;
+    promise: Promise<mongoose.Connection> | null;
+  } | undefined;
 }
 
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+if (!global.mongooseCache) {
+  global.mongooseCache = { conn: null, promise: null };
 }
 
-async function connectDB() {
+const cached = global.mongooseCache!; // <-- El "!" asegura que no es undefined
+
+async function connectDB(): Promise<mongoose.Connection> {
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
-      return mongoose;
+    cached.promise = mongoose.connect(MONGODB_URI).then(() => {
+      return mongoose.connection;
     });
   }
 
