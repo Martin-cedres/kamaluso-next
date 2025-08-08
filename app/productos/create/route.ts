@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Product, { IProduct } from "@/lib/models/Product";
+import mongoose from "mongoose";
 
 export async function GET() {
   try {
@@ -53,7 +54,10 @@ export async function POST(request: Request) {
 
     await newProduct.save();
 
-    return NextResponse.json({ message: "Producto creado", id: newProduct._id.toString() });
+    return NextResponse.json({ 
+      message: "Producto creado", 
+      id: (newProduct._id as mongoose.Types.ObjectId).toString() 
+    });
   } catch (error) {
     console.error("Error al crear producto:", error);
     return NextResponse.json(
