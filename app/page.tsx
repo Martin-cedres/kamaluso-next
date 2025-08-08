@@ -1,4 +1,4 @@
-// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\page.tsx
+// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\page.tsx ///
 "use client";
 
 import { useEffect, useState } from "react";
