@@ -1,8 +1,7 @@
-
 import React from "react";
 import ProductDetailClient from "@/components/ProductDetailClient";
-import Product from "@/models/product";
-import  connectDB  from "@/lib/db";
+import Product, { IProduct } from "@/models/product";
+import connectDB from "@/lib/db";
 
 interface Variant {
   tipo: "tapa-dura" | "tapa-flex";
@@ -25,7 +24,7 @@ interface ProductType {
 async function getProductBySlug(slug: string): Promise<ProductType | null> {
   await connectDB();
 
-  const productFromDB = await Product.findOne({ slug }).lean();
+  const productFromDB = await Product.findOne({ slug }).lean<IProduct>();
 
   if (!productFromDB) return null;
 
@@ -37,7 +36,8 @@ async function getProductBySlug(slug: string): Promise<ProductType | null> {
     description: productFromDB.description,
     destacado: false,
     category: "productos",
-    subcategory: productFromDB.type === "sublimable" ? "sublimables" : "personalizados",
+    subcategory:
+      productFromDB.type === "sublimable" ? "sublimables" : "personalizados",
     variantes: [
       { tipo: "tapa-flex", price: productFromDB.priceFlex },
       { tipo: "tapa-dura", price: productFromDB.priceDura || 0 },

@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";
+import Product, { IProduct } from "@/lib/models/Product";
 
 export async function GET() {
   try {
     await connectDB();
-    const products = await Product.find().lean();
+    // Tipamos lean para que TS sepa qué devuelve
+    const products = await Product.find().lean<IProduct[]>();
     return NextResponse.json(products);
   } catch (error) {
     console.error("Error al obtener productos:", error);
-    return NextResponse.json({ error: "Error al obtener productos" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al obtener productos" },
+      { status: 500 }
+    );
   }
 }
 
@@ -21,7 +25,7 @@ export async function POST(request: Request) {
 
     const name = formData.get("name")?.toString() || "";
     const description = formData.get("description")?.toString() || "";
-    const type = formData.get("type")?.toString() || "sublimable";
+    const type = (formData.get("type")?.toString() as "sublimable" | "personalizado") || "sublimable";
     const alt = formData.get("alt")?.toString() || "";
     const keywordsStr = formData.get("keywords")?.toString() || "";
     const priceFlex = parseFloat(formData.get("priceFlex")?.toString() || "0");
@@ -29,7 +33,10 @@ export async function POST(request: Request) {
     const priceDura = priceDuraStr ? parseFloat(priceDuraStr) : undefined;
 
     if (!name || !description || !alt) {
-      return NextResponse.json({ message: "Faltan campos obligatorios" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
     }
 
     const keywords = keywordsStr ? keywordsStr.split(",").map((k) => k.trim()) : [];
@@ -46,9 +53,12 @@ export async function POST(request: Request) {
 
     await newProduct.save();
 
-    return NextResponse.json({ message: "Producto creado", id: newProduct._id });
+    return NextResponse.json({ message: "Producto creado", id: newProduct._id.toString() });
   } catch (error) {
     console.error("Error al crear producto:", error);
-    return NextResponse.json({ message: "Error interno" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error interno" },
+      { status: 500 }
+    );
   }
 }

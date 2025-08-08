@@ -1,6 +1,7 @@
+// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\api\products\route.ts
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import Product from "@/lib/models/Product";  // No necesitas importar IProduct si no lo usas acá
+import Product, { IProduct } from "@/lib/models/Product"; // Si IProduct ya está en el modelo, úsalo desde ahí
 import { uploadImageToS3 } from "@/lib/s3";
 import sharp from "sharp";
 import mongoose from "mongoose";
@@ -8,17 +9,22 @@ import mongoose from "mongoose";
 export async function GET() {
   try {
     await connectDB();
-    const products = await Product.find({}).lean();
 
-    const productsSerialized = products.map(product => ({
+    // Tipado directo en lean<IProduct>()
+    const products = await Product.find({}).lean<IProduct[]>();
+
+    const productsSerialized = products.map((product) => ({
       ...product,
-      _id: product._id.toString(),
+      _id: (product._id as any).toString(),
     }));
 
     return NextResponse.json(productsSerialized);
   } catch (error) {
     console.error("Error al obtener productos:", error);
-    return NextResponse.json({ error: "Error al obtener productos" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error al obtener productos" },
+      { status: 500 }
+    );
   }
 }
 
@@ -30,35 +36,49 @@ export async function POST(request: Request) {
 
     const name = formData.get("name")?.toString() || "";
     const description = formData.get("description")?.toString() || "";
-    const type = formData.get("type")?.toString() || "sublimable";
+    const type =
+      (formData.get("type")?.toString() as
+        | "sublimable"
+        | "personalizado") || "sublimable";
     const alt = formData.get("alt")?.toString() || "";
     const keywordsStr = formData.get("keywords")?.toString() || "";
-    const priceFlex = parseFloat(formData.get("priceFlex")?.toString() || "0");
+    const priceFlex = parseFloat(
+      formData.get("priceFlex")?.toString() || "0"
+    );
     const priceDuraStr = formData.get("priceDura")?.toString();
-    const priceDura = priceDuraStr ? parseFloat(priceDuraStr) : undefined;
+    const priceDura = priceDuraStr
+      ? parseFloat(priceDuraStr)
+      : undefined;
 
     if (!name || !description || !alt) {
-      return NextResponse.json({ message: "Faltan campos obligatorios" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
     }
 
-    const keywords = keywordsStr ? keywordsStr.split(",").map(k => k.trim()) : [];
+    const keywords = keywordsStr
+      ? keywordsStr.split(",").map((k) => k.trim())
+      : [];
 
     // Procesar imágenes
     const files = formData.getAll("files") as File[];
     const images: string[] = [];
 
     for (const file of files) {
+      if (!file || typeof file.arrayBuffer !== "function") continue;
+
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Convertir a WebP optimizado
       const webpBuffer = await sharp(buffer)
         .webp({ quality: 80 })
         .toBuffer();
 
-      const fileName = `${Date.now()}-${file.name.split(".")[0]}.webp`;
+      const fileName = `${Date.now()}-${
+        file.name ? String(file.name).split(".")[0] : "img"
+      }.webp`;
 
-      // Subir a S3 y obtener URL
       const url = await uploadImageToS3(webpBuffer, fileName);
       images.push(url);
     }
@@ -74,15 +94,21 @@ export async function POST(request: Request) {
       images,
     });
 
-    await newProduct.save();
+    const saved = await newProduct.save();
 
-    // Aquí corregimos el casteo para que TypeScript entienda que _id es ObjectId
     return NextResponse.json({
       message: "Producto creado correctamente",
-      id: (newProduct._id as mongoose.Types.ObjectId).toString(),
+      id: (saved._id as mongoose.Types.ObjectId).toString(),
+      product: {
+        ...saved.toObject(),
+        _id: (saved._id as mongoose.Types.ObjectId).toString(),
+      },
     });
   } catch (error) {
     console.error("Error al crear producto:", error);
-    return NextResponse.json({ message: "Error interno" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error interno" },
+      { status: 500 }
+    );
   }
 }

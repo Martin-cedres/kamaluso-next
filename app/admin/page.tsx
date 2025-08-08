@@ -1,3 +1,4 @@
+// C:\Users\LENOVO\Desktop\kamaluso-next-completo\app\admin\page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -12,6 +13,8 @@ type Product = {
   priceFlex: number;
   priceDura?: number;
   images: string[];
+  destacado?: boolean;
+  slug?: string;
 };
 
 export default function AdminPanel() {
@@ -35,9 +38,11 @@ export default function AdminPanel() {
       setLoadingProducts(true);
       try {
         const res = await fetch("/api/products");
+        if (!res.ok) throw new Error("Error cargando productos");
         const data = await res.json();
         setProducts(data);
-      } catch {
+      } catch (err) {
+        console.error("fetchProducts:", err);
         setMessage({ type: "error", text: "Error cargando productos" });
       }
       setLoadingProducts(false);
@@ -91,7 +96,8 @@ export default function AdminPanel() {
       setMessage({ type: "success", text: "Producto eliminado" });
 
       if (editingProduct?._id === id) resetForm();
-    } catch {
+    } catch (err) {
+      console.error("deleteProduct:", err);
       setMessage({ type: "error", text: "No se pudo eliminar el producto" });
     }
   }
@@ -120,7 +126,7 @@ export default function AdminPanel() {
     }
 
     try {
-      let res;
+      let res: Response;
       if (editingProduct) {
         res = await fetch(`/api/products/${editingProduct._id}`, {
           method: "PUT",
@@ -142,11 +148,12 @@ export default function AdminPanel() {
       if (editingProduct) {
         setProducts(products.map((p) => (p._id === editingProduct._id ? data : p)));
       } else {
-        setProducts([...products, data]);
+        setProducts((prev) => [...prev, data]);
       }
 
       resetForm();
     } catch (error: any) {
+      console.error("handleSubmit:", error);
       setMessage({ type: "error", text: error.message || "Error inesperado" });
     }
 
