@@ -9,6 +9,7 @@ export interface IProduct extends Document {
   priceFlex: number;
   priceDura?: number;
   images: string[];
+  slug: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ const productSchema = new Schema<IProduct>({
   priceFlex: { type: Number, required: true },
   priceDura: { type: Number },
   images: { type: [String], default: [] },
+  slug: { type: String, required: true, unique: true },
 }, { timestamps: true });
 
 const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>("Product", productSchema);
