@@ -4,14 +4,24 @@ import Product from "@/lib/models/Product";
 import { uploadImageToS3 } from "@/lib/s3";
 import sharp from "sharp";
 
-interface Params {
-  params: { id: string };
-}
-
-export async function PUT(request: Request, { params }: Params) {
+export async function GET() {
   await dbConnect();
 
-  const id = params.id;
+  try {
+    const products = await Product.find({}).lean();
+    const serialized = products.map((p) => ({
+      ...p,
+      _id: p._id.toString(),
+    }));
+    return NextResponse.json(serialized);
+  } catch (error) {
+    console.error("Error GET productos:", error);
+    return NextResponse.json({ message: "Error al obtener productos" }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  await dbConnect();
 
   try {
     const formData = await request.formData();
@@ -31,7 +41,7 @@ export async function PUT(request: Request, { params }: Params) {
 
     const keywords = keywordsStr ? keywordsStr.split(",").map(k => k.trim()) : [];
 
-    // Procesar imágenes nuevas, si hay
+    // Procesar imágenes
     const files = formData.getAll("files") as File[];
     let uploadedImages: string[] = [];
 
@@ -49,8 +59,7 @@ export async function PUT(request: Request, { params }: Params) {
       }
     }
 
-    // Armar objeto para update (si subieron imágenes, reemplazo; si no, no toco)
-    const updateData: any = {
+    const newProduct = new Product({
       name,
       description,
       type,
@@ -58,43 +67,17 @@ export async function PUT(request: Request, { params }: Params) {
       keywords,
       priceFlex,
       priceDura: type === "personalizado" ? priceDura : undefined,
-    };
+      images: uploadedImages,
+    });
 
-    if (uploadedImages.length > 0) {
-      updateData.images = uploadedImages;
-    }
-
-    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
-
-    if (!updatedProduct) {
-      return NextResponse.json({ message: "Producto no encontrado" }, { status: 404 });
-    }
+    const savedProduct = await newProduct.save();
 
     return NextResponse.json({
-      message: "Producto actualizado correctamente",
-      product: { ...updatedProduct.toObject(), _id: updatedProduct._id.toString() },
+      message: "Producto creado correctamente",
+      product: { ...savedProduct.toObject(), _id: savedProduct._id.toString() },
     });
   } catch (error) {
-    console.error("Error al actualizar producto:", error);
-    return NextResponse.json({ message: "Error al actualizar producto" }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request, { params }: Params) {
-  await dbConnect();
-
-  const id = params.id;
-
-  try {
-    const deletedProduct = await Product.findByIdAndDelete(id);
-
-    if (!deletedProduct) {
-      return NextResponse.json({ message: "Producto no encontrado" }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: "Producto eliminado correctamente" });
-  } catch (error) {
-    console.error("Error al eliminar producto:", error);
-    return NextResponse.json({ message: "Error al eliminar producto" }, { status: 500 });
+    console.error("Error POST producto:", error);
+    return NextResponse.json({ message: "Error al crear producto" }, { status: 500 });
   }
 }
