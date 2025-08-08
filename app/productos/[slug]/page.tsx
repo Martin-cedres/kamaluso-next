@@ -29,7 +29,7 @@ async function getProductBySlug(slug: string): Promise<ProductType | null> {
   if (!productFromDB) return null;
 
   return {
-    id: productFromDB._id.toString(),
+    id: (productFromDB._id as { toString(): string }).toString(),
     name: productFromDB.name,
     slug: productFromDB.slug,
     images: productFromDB.images || [],
