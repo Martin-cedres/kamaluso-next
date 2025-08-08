@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/db";
+import connectDB from "@/lib/dbConnect";
 import Product, { IProduct } from "@/lib/models/Product";
 import mongoose from "mongoose";
 

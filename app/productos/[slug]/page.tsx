@@ -1,7 +1,7 @@
 import React from "react";
 import ProductDetailClient from "@/components/ProductDetailClient";
 import Product, { IProduct } from "@/models/product";
-import connectDB from "@/lib/db";
+import connectDB from "@/lib/dbConnect";
 
 interface Variant {
   tipo: "tapa-dura" | "tapa-flex";
