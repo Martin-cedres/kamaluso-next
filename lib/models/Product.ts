@@ -19,7 +19,11 @@ const ProductSchema = new Schema<IProduct>(
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
-    type: { type: String, enum: ["sublimable", "personalizado"], default: "sublimable" },
+    type: {
+      type: String,
+      enum: ["sublimable", "personalizado"],
+      default: "sublimable",
+    },
     alt: { type: String, required: true },
     keywords: [{ type: String }],
     priceFlex: { type: Number, required: true },
@@ -32,4 +36,5 @@ const ProductSchema = new Schema<IProduct>(
 const Product: Model<IProduct> =
   mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);
 
-export default Product;
+export { Product };
+export type { IProduct };

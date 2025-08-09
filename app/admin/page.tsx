@@ -59,11 +59,11 @@ export default function AdminPage() {
     setForm((f) => ({ ...f, [name]: value }));
   }
 
-  // Manejar selección de archivos para imágenes nuevas
+  // Manejar selección de archivos para imágenes nuevas (corregido)
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-    if (e.target.files) {
-      setForm((f) => ({ ...f, newFiles: Array.from(e.target.files) }));
-    }
+    const files = e.target.files;
+    if (!files) return;
+    setForm((f) => ({ ...f, newFiles: Array.from(files) }));
   }
 
   // Subir archivos a S3
